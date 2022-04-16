@@ -1,0 +1,48 @@
+variables:
+  packageVersion: 1.0.$(build.buildId)
+
+trigger:
+- main
+
+pool:
+  vmImage: 'macOS-latest'
+
+steps:
+
+- task: NuGetToolInstaller@1
+
+- task: UseDotNet@2
+  displayName: 'Use .NET Core sdk'
+  inputs:
+    packageType: sdk
+    version: 6.x
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '$(Build.SourcesDirectory)/csharp/livetext-sharp.csproj'
+    workingDirectory: '$(Build.SourcesDirectory)/csharp/'
+    arguments: '-c Release /p:Version=$(packageVersion)'
+
+- task: CmdLine@2
+  inputs:
+    script: 'ls $(Build.SourcesDirectory) -hR'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'pack'
+    packagesToPack: '$(Build.SourcesDirectory)/csharp/livetext-sharp.csproj'
+    configuration: 'Release'
+    versioningScheme: 'off'
+    buildProperties: 'Version="$(packageVersion)"'
+
+- task: CmdLine@2
+  inputs:
+    script: 'ls $(Build.SourcesDirectory) -hR'
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    packagesToPush: '**/*.nupkg'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'nuget-curiosity'
