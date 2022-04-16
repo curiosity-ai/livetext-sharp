@@ -27,9 +27,7 @@
     <None Remove="RunProcessAsTask" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="livetext-sharp">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Content CopyToOutputDirectory="PreserveNewest" Include="livetext-sharp" Link="livetext-sharp" Pack="true"  PackagePath="runtimes/osx-x64/livetext-sharp"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
