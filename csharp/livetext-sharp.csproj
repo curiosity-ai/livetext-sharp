@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="SixLabors.ImageSharp" />
+    <None Remove="RunProcessAsTask" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="livetext-sharp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
+    <PackageReference Include="RunProcessAsTask" Version="1.2.4" />
+  </ItemGroup>
+</Project>
