@@ -14,7 +14,7 @@ namespace LiveTextSharp
         private readonly Image _image;
         private readonly string _language;
 
-        private static string _path = typeof(RecognitionRequest).Assembly.Location;
+        public static string CliPath { get; set; } = null;
 
         public RecognitionRequest(Image image, string language)
         {
@@ -24,6 +24,11 @@ namespace LiveTextSharp
 
         public async Task<string> RecognizeAsync(CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(CliPath))
+            {
+                CliPath = Path.GetDirectoryName(typeof(RecognitionRequest).Assembly.Location);
+            }
+
             var imgPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".png");
 
             using(var file = File.OpenWrite(imgPath))
@@ -37,15 +42,17 @@ namespace LiveTextSharp
             {
                 var psi = new ProcessStartInfo()
                 {
-                    WorkingDirectory = _path,
+                    WorkingDirectory = CliPath,
                     FileName = "livetext-sharp",
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
                 };
+
                 psi.ArgumentList.Add(imgPath);
                 psi.ArgumentList.Add(_language);
 
                 var results = await ProcessEx.RunAsync(psi, cancellationToken);
+
                 return results.ExitCode == 0 ? string.Join("\n", results.StandardOutput) : throw new Exception(string.Join("\n", results.StandardOutput));
             }
             finally
