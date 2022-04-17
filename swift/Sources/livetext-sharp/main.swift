@@ -5,6 +5,17 @@ import Vision
 
 var joiner = " "
 
+struct LiveTextBounds: Encodable {
+    let topLeft: CGPoint
+    let topRight: CGPoint
+    let bottomLeft: CGPoint
+    let bottomRight: CGPoint
+}
+struct LiveTextBlock: Encodable {
+    let text: String
+    let bounds: LiveTextBounds
+}
+
 func convertCIImageToCGImage(inputImage: CIImage) -> CGImage? {
     let context = CIContext(options: nil)
     if let cgImage = context.createCGImage(inputImage, from: inputImage.extent) {
@@ -16,9 +27,33 @@ func convertCIImageToCGImage(inputImage: CIImage) -> CGImage? {
 @available(macOS 10.15, *)
 func recognizeTextHandler(request: VNRequest, error: Error?) {
     guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
-    let recognizedStrings = observations.compactMap { observation in return observation.topCandidates(1).first?.string }
-    let joined = recognizedStrings.joined(separator: joiner)
-    print(joined)
+    //let recognizedStrings = observations.compactMap { observation in return observation.topCandidates(1).first?.string }
+    //let joined = recognizedStrings.joined(separator: joiner)
+    //print(joined)
+
+    let blocks: [LiveTextBlock] = observations.compactMap { observation in
+                guard let recognizedText = observation.topCandidates(1).first?.string else { return nil }
+                return .init(
+                    text: recognizedText,
+                    bounds: .init(
+                        topLeft: observation.topLeft,
+                        topRight: observation.topRight,
+                        bottomLeft: observation.bottomLeft,
+                        bottomRight: observation.bottomRight
+                    )
+                )
+            }
+
+    do {            
+        let encodedData = try JSONEncoder().encode(blocks)
+        let jsonString = String(data: encodedData, encoding: .utf8)
+        print(jsonString!)
+    }
+    catch 
+    {
+        print("Error: \(error)")
+        exit(0xDEAD)
+    }
 }
 
 @available(macOS 10.15, *)

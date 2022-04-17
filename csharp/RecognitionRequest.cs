@@ -6,6 +6,9 @@ using System.Threading;
 using System.IO;
 using System;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 
 namespace LiveTextSharp
 {
@@ -16,11 +19,14 @@ namespace LiveTextSharp
 
         public static string CliPath { get; set; } = null;
 
+        public static bool IsSupported => OperatingSystem.IsMacOSVersionAtLeast(10, 15);
+        public static bool CanSetLanguages => OperatingSystem.IsMacOSVersionAtLeast(11);
+
         public RecognitionRequest(Image image, params string[] languages)
         {
             _image = image;
 
-            if(OperatingSystem.IsMacOSVersionAtLeast(11))
+            if (OperatingSystem.IsMacOSVersionAtLeast(11))
             {
                 _language = string.Join(";", languages);
             }
@@ -30,7 +36,7 @@ namespace LiveTextSharp
             }
         }
 
-        public async Task<string> RecognizeAsync(CancellationToken cancellationToken)
+        public async Task<LiveTextBlock[]> RecognizeAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(CliPath))
             {
@@ -61,13 +67,27 @@ namespace LiveTextSharp
 
                 var results = await ProcessEx.RunAsync(psi, cancellationToken);
 
-                return results.ExitCode == 0 ? string.Join("\n", results.StandardOutput) : throw new Exception(string.Join("\n", results.StandardOutput));
+                return results.ExitCode == 0 ? JsonSerializer.Deserialize<LiveTextBlock[]> (string.Join('\n',results.StandardOutput)) : throw new Exception(string.Join("\n", results.StandardOutput));
             }
             finally
             {
                 File.Delete(imgPath);
             }
         }
+    }
+
+    public sealed class LiveTextBlock
+    {
+        [JsonPropertyName("bounds")] public LiveTextBounds Bounds { get; set; }
+        [JsonPropertyName("text")]   public string Text { get; set; }
+    }
+
+    public sealed class LiveTextBounds
+    {
+        [JsonPropertyName("bottomRight")]   public double[] BottomRight { get; set; }
+        [JsonPropertyName("topRight")]      public double[] TopRight { get; set; }
+        [JsonPropertyName("topLeft")]       public double[] TopLeft { get; set; }
+        [JsonPropertyName("bottomLeft")]    public double[] BottomLeft { get; set; }
     }
 }
 
