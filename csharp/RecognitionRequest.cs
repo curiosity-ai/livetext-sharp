@@ -35,7 +35,17 @@ namespace LiveTextSharp
 
             try
             {
-                var results = await ProcessEx.RunAsync(Path.Combine(_path, "native", "livetext-sharp"), $"{imgPath} {_language}");
+                var psi = new ProcessStartInfo()
+                {
+                    WorkingDirectory = _path,
+                    FileName = "livetext-sharp",
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                };
+                psi.ArgumentList.Add(imgPath);
+                psi.ArgumentList.Add(_language);
+
+                var results = await ProcessEx.RunAsync(psi, cancellationToken);
                 return results.ExitCode == 0 ? string.Join("\n", results.StandardOutput) : throw new Exception(string.Join("\n", results.StandardOutput));
             }
             finally
