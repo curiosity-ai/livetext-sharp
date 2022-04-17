@@ -14,6 +14,8 @@ namespace LiveTextSharp
         private readonly Image _image;
         private readonly string _language;
 
+        private static string _path = typeof(RecognitionRequest).Assembly.Location;
+
         public RecognitionRequest(Image image, string language)
         {
             _image = image;
@@ -33,7 +35,7 @@ namespace LiveTextSharp
 
             try
             {
-                var results = await ProcessEx.RunAsync("livetext-sharp", $"{imgPath} {_language}");
+                var results = await ProcessEx.RunAsync(Path.Combine(_path, "native", "livetext-sharp"), $"{imgPath} {_language}");
                 return results.ExitCode == 0 ? string.Join("\n", results.StandardOutput) : throw new Exception(string.Join("\n", results.StandardOutput));
             }
             finally
