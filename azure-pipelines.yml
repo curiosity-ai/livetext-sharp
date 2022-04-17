@@ -18,6 +18,16 @@ steps:
     version: 6.x
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
+- task: CmdLine@2
+  inputs:
+    script: |
+      cd $(Build.SourcesDirectory)/swift
+      swift build -c release
+      cp .build/release/livetext-sharp $(Build.SourcesDirectory)/csharp/livetext-sharp
+      ls -R $(Build.SourcesDirectory)
+
+
+
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
@@ -28,6 +38,7 @@ steps:
 - task: CmdLine@2
   inputs:
     script: 'ls -R $(Build.SourcesDirectory)'
+
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
