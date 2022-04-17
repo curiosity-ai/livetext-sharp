@@ -16,10 +16,18 @@ namespace LiveTextSharp
 
         public static string CliPath { get; set; } = null;
 
-        public RecognitionRequest(Image image, string language)
+        public RecognitionRequest(Image image, params string[] languages)
         {
             _image = image;
-            _language = language;
+
+            if(OperatingSystem.IsMacOSVersionAtLeast(11))
+            {
+                _language = string.Join(";", languages);
+            }
+            else
+            {
+                _language = "en-US";
+            }
         }
 
         public async Task<string> RecognizeAsync(CancellationToken cancellationToken)
