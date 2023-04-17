@@ -23,7 +23,8 @@ steps:
     script: |
       cd $(Build.SourcesDirectory)/swift
       rm $(Build.SourcesDirectory)/csharp/livetext-sharp
-      swift build -c release
+      swift build -c release --arch arm64 --arch x86_64
+      lipo -info .build/release/livetext-sharp
       cp .build/release/livetext-sharp $(Build.SourcesDirectory)/csharp/livetext-sharp
       ls -R $(Build.SourcesDirectory)
 
