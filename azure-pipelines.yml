@@ -26,7 +26,7 @@ steps:
       swift build -c release --arch arm64 --arch x86_64
       lipo -info .build/release/livetext-sharp
       cp .build/release/livetext-sharp $(Build.SourcesDirectory)/csharp/livetext-sharp
-      ls -R $(Build.SourcesDirectory)
+      ls -aR $(Build.SourcesDirectory)
 
 
 
