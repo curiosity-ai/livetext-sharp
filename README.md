@@ -16,6 +16,22 @@ var request = new RecognitionRequest(image);
 string recognizedText = request.RecognizeAsync();
 ```
 
+## Build
+
+1. Build the swift helper as universal binary
+
+```shell
+cd swift
+xcrun swift build -c release --arch arm64 --arch x86_64
+cd ..
+```
+2. Copy the binary to the csharp directory
+
+```shell
+cp ./swift/.build/apple/Products/Release/livetext-sharp ./csharp
+```
+3. Build the C# package normally
+
 ## License
 
 This package is licensed under the MIT License. See the `LICENSE` file for more information.
