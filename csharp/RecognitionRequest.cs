@@ -17,7 +17,8 @@ namespace LiveTextSharp
         private readonly Image  _image;
         private readonly string _language;
 
-        public static string CliPath { get; set; } = null;
+        public static string WorkingDirectory { get; set; } = null;
+        public static string CliPath          { get; set; } = null;
         private const string CliExeName = "livetext-sharp";
 
         public static bool IsSupported     => OperatingSystem.IsMacOSVersionAtLeast(10, 15);
@@ -37,56 +38,64 @@ namespace LiveTextSharp
             }
         }
 
-        private void TryFindCLIWorkingDir()
+        private void TryFindCLI()
         {
             if (string.IsNullOrWhiteSpace(CliPath))
             {
                 var assmeblyDir = typeof(RecognitionRequest).Assembly.Location;
 
-                var workDir = Path.GetDirectoryName(assmeblyDir);
-                CliPath = workDir;
+                WorkingDirectory = Path.GetDirectoryName(assmeblyDir);
+                CliPath          = Path.Combine(WorkingDirectory, CliExeName);
 
-                if (!File.Exists(Path.Combine(CliPath, CliExeName)))
+                if (File.Exists(CliPath))
                 {
-                    switch (RuntimeInformation.ProcessArchitecture)
+                    return;
+                }
+                else
+                {
+                    if (RuntimeInformation.RuntimeIdentifier.Contains("osx"))
                     {
-                        case Architecture.Arm:
-                        case Architecture.Arm64:
+                        switch (RuntimeInformation.ProcessArchitecture)
                         {
-                            CliPath = Path.Combine(workDir, "runtimes", "osx-arm64", "native");
-
-                            if (!File.Exists(Path.Combine(CliPath, CliExeName)))
+                            case Architecture.Arm:
+                            case Architecture.Arm64:
                             {
-                                throw new InvalidOperationException($"Could not find {Path.Combine(CliPath, CliExeName)}");
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            CliPath = Path.Combine(workDir, "runtimes", "osx-x64", "native");
+                                CliPath = Path.Combine(WorkingDirectory, "runtimes", "osx-arm64", "native", CliExeName);
 
-                            if (!File.Exists(Path.Combine(CliPath, CliExeName)))
-                            {
-                                throw new InvalidOperationException($"Could not find {Path.Combine(CliPath, CliExeName)}");
+                                if (!File.Exists(Path.Combine(CliPath)))
+                                {
+                                    throw new InvalidOperationException($"Could not find {CliPath}");
+                                }
+                                return;
                             }
-                            break;
+                            default:
+                            {
+                                CliPath = Path.Combine(WorkingDirectory, "runtimes", "osx-x64", "native", CliExeName);
+
+                                if (!File.Exists(CliPath))
+                                {
+                                    throw new InvalidOperationException($"Could not find {CliPath}");
+                                }
+                                return;
+                            }
                         }
                     }
                 }
+                throw new InvalidOperationException($"Could not find {CliPath}");
             }
         }
 
 
         public async Task<LiveTextBlock[]> RecognizeAsync(CancellationToken cancellationToken)
         {
-            TryFindCLIWorkingDir();
+            TryFindCLI();
 
             var imgPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".png");
 
             using (var file = File.OpenWrite(imgPath))
             {
-                await _image.SaveAsPngAsync(file);
-                await file.FlushAsync();
+                await _image.SaveAsPngAsync(file, cancellationToken);
+                await file.FlushAsync(cancellationToken);
                 file.Close();
             }
 
@@ -94,10 +103,10 @@ namespace LiveTextSharp
             {
                 var psi = new ProcessStartInfo()
                 {
-                    WorkingDirectory = CliPath,
-                    FileName         = CliExeName,
+                    WorkingDirectory = WorkingDirectory,
+                    FileName         = CliPath,
                     CreateNoWindow   = true,
-                    WindowStyle      = ProcessWindowStyle.Hidden,
+                    WindowStyle      = ProcessWindowStyle.Hidden
                 };
 
                 psi.ArgumentList.Add(imgPath);
