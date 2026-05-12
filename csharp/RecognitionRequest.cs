@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using SixLabors.ImageSharp;
+using SkiaSharp;
 using RunProcessAsTask;
 using System.Threading;
 using System.IO;
@@ -14,7 +14,7 @@ namespace LiveTextSharp
 {
     public sealed class RecognitionRequest
     {
-        private readonly Image  _image;
+        private readonly SKBitmap _image;
         private readonly string _language;
 
         public static string WorkingDirectory { get; set; } = null;
@@ -24,7 +24,7 @@ namespace LiveTextSharp
         public static bool IsSupported     => OperatingSystem.IsMacOSVersionAtLeast(10, 15);
         public static bool CanSetLanguages => OperatingSystem.IsMacOSVersionAtLeast(11);
 
-        public RecognitionRequest(Image image, params string[] languages)
+        public RecognitionRequest(SKBitmap image, params string[] languages)
         {
             _image = image;
 
@@ -94,7 +94,9 @@ namespace LiveTextSharp
 
             using (var file = File.OpenWrite(imgPath))
             {
-                await _image.SaveAsPngAsync(file, cancellationToken);
+                using var data = _image.Encode(SKEncodedImageFormat.Png, 100);
+                var bytes = data.ToArray();
+                await file.WriteAsync(bytes, cancellationToken);
                 await file.FlushAsync(cancellationToken);
                 file.Close();
             }

@@ -23,7 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="SixLabors.ImageSharp" />
+    <None Remove="SkiaSharp" />
     <None Remove="RunProcessAsTask" />
   </ItemGroup>
   <ItemGroup>
@@ -31,7 +31,7 @@
     <None CopyToOutputDirectory="PreserveNewest" Include="livetext-sharp" Link="livetext-sharp" Pack="true" PackagePath="runtimes/osx-arm64/native"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="RunProcessAsTask" Version="1.2.4" />
   </ItemGroup>
 </Project>
