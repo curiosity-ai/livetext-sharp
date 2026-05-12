@@ -9,6 +9,17 @@ pool:
 
 steps:
 
+- task: PowerShell@2
+  displayName: 'Mod buildId to avoid int32 overflow'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $buildID = $($env:BUILD_BUILDID)
+      $modBuildID = [int]$buildID % 65536  # ensure fits in int16
+      $newPackageVersion = "1.0.$modBuildID"
+      Write-Host "##vso[task.setvariable variable=packageVersion;]$newPackageVersion"
+      Write-Host "Updated packageVersion to '$newPackageVersion'"
+
 - task: NuGetToolInstaller@1
 
 - task: UseDotNet@2
