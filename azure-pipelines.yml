@@ -1,5 +1,5 @@
 variables:
-  packageVersion: 1.0.$(build.buildId)
+  packageVersion: yy.M.$(build.buildId)
 
 trigger:
 - main
@@ -10,13 +10,14 @@ pool:
 steps:
 
 - task: PowerShell@2
-  displayName: 'Mod buildId to avoid int32 overflow'
+  displayName: 'Create CalVer Version'
   inputs:
     targetType: 'inline'
     script: |
+      $dottedDate = (Get-Date).ToString("yy.M")
       $buildID = $($env:BUILD_BUILDID)
       $modBuildID = [int]$buildID % 65536  # ensure fits in int16
-      $newPackageVersion = "1.0.$modBuildID"
+      $newPackageVersion = "$dottedDate.$modBuildID"
       Write-Host "##vso[task.setvariable variable=packageVersion;]$newPackageVersion"
       Write-Host "Updated packageVersion to '$newPackageVersion'"
 
