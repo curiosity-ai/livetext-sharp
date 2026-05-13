@@ -65,7 +65,7 @@ steps:
     verbosityPack: 'Diagnostic'
     nobuild: true
 
-- task: NuGetCommand@2
+- task: DotNetCoreCLI@2
   displayName: 'push nuget'
   inputs:
     command: 'push'
