@@ -65,7 +65,10 @@ steps:
     verbosityPack: 'Diagnostic'
     nobuild: true
 
-- task: DotNetCoreCLI@2
+- script: brew install mono
+  displayName: 'Install mono for NuGet push'
+
+- task: NuGetCommand@2
   displayName: 'push nuget'
   inputs:
     command: 'push'
