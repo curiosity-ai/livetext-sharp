@@ -1,5 +1,7 @@
 variables:
-  packageVersion: yy.M.$(build.buildId)
+  project: '$(Build.SourcesDirectory)/csharp/livetext-sharp.csproj'
+  buildConfiguration: 'Release'
+  targetVersion: yy.M.$(build.buildId)
 
 trigger:
 - main
@@ -17,17 +19,18 @@ steps:
       $dottedDate = (Get-Date).ToString("yy.M")
       $buildID = $($env:BUILD_BUILDID)
       $modBuildID = [int]$buildID % 65536  # ensure fits in int16
-      $newPackageVersion = "$dottedDate.$modBuildID"
-      Write-Host "##vso[task.setvariable variable=packageVersion;]$newPackageVersion"
-      Write-Host "Updated packageVersion to '$newPackageVersion'"
+      $newTargetVersion = "$dottedDate.$modBuildID"
+      Write-Host "##vso[task.setvariable variable=targetVersion;]$newTargetVersion"
+      Write-Host "Updated targetVersion to '$newTargetVersion'"
 
 - task: NuGetToolInstaller@1
 
 - task: UseDotNet@2
-  displayName: 'Use .NET Core sdk'
+  displayName: 'Use .NET 10.0 SDK'
   inputs:
     packageType: sdk
     version: 10.x
+    includePreviewVersions: true
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
 - task: CmdLine@2
@@ -40,32 +43,30 @@ steps:
       cp .build/apple/Products/Release/livetext-sharp $(Build.SourcesDirectory)/csharp/livetext-sharp
       ls -aR $(Build.SourcesDirectory)
 
-
+- task: DotNetCoreCLI@2
+  displayName: 'restore nuget'
+  inputs:
+    command: 'restore'
+    projects: '$(project)'
 
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    projects: '$(Build.SourcesDirectory)/csharp/livetext-sharp.csproj'
-    workingDirectory: '$(Build.SourcesDirectory)/csharp/'
-    arguments: '-c Release /p:Version=$(packageVersion)'
-
-- task: CmdLine@2
-  inputs:
-    script: 'ls -R $(Build.SourcesDirectory)'
+    projects: '$(project)'
+    arguments: '-c $(buildConfiguration) /p:Version=$(targetVersion)  /p:AllowUnsafeBlocks=True /p:LangVersion=latest'
 
 - task: DotNetCoreCLI@2
   inputs:
     command: 'pack'
-    packagesToPack: '$(Build.SourcesDirectory)/csharp/livetext-sharp.csproj'
-    configuration: 'Release'
+    packagesToPack: '$(project)'
     versioningScheme: 'off'
-    buildProperties: 'Version="$(packageVersion)"'
-
-- task: CmdLine@2
-  inputs:
-    script: 'ls -R $(Build.SourcesDirectory)'
+    configuration: 'Release'
+    buildProperties: 'Version="$(targetVersion)";AllowUnsafeBlocks="True";LangVersion="latest"'
+    verbosityPack: 'Diagnostic'
+    nobuild: true
 
 - task: NuGetCommand@2
+  displayName: 'push nuget'
   inputs:
     command: 'push'
     packagesToPush: '**/*.nupkg'
